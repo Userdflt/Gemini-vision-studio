@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Nano Banana Power Prompt and Image Generator",
+  "description": "An application that orchestrates a two-stage image generation workflow. It first turns a user's brief into a precise, one-shot prompt, and then uses that prompt to generate images with the 'gemini-2.5-flash-image' model.",
+  "requestFramePermissions": []
+}
