@@ -31,7 +31,9 @@ const fileToGenerativePart = async (file: File): Promise<Part> => {
 const App: React.FC = () => {
   const [brief, setBrief] = useState<string>('');
   const [generationMode, setGenerationMode] = useState<GenerationMode>(GenerationMode.PromptAndImage);
-  const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+  const [referenceImages, setReferenceImages] = useState<File[]>([]);
+  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
+  const [editImage, setEditImage] = useState<File | null>(null);
   const [imageCount, setImageCount] = useState<number>(4);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,24 +52,57 @@ const App: React.FC = () => {
     setGeneratedImages(null);
 
     try {
-      const imageParts = await Promise.all(
-        uploadedImages.map(fileToGenerativePart)
+      let briefWithContext = brief;
+      const allImageFilesForPrompt: File[] = [];
+
+      // The order is important for the model to associate text with the following image
+      if (backgroundImage) {
+        briefWithContext += "\n\n[Instruction] Use the following image as the background for the generation.";
+        allImageFilesForPrompt.push(backgroundImage);
+      }
+      if (editImage) {
+        briefWithContext += "\n\n[Instruction] The user wants to edit or inpaint the following image based on the brief.";
+        allImageFilesForPrompt.push(editImage);
+      }
+      if (referenceImages.length > 0) {
+        briefWithContext += `\n\n[Instruction] Use the following ${referenceImages.length} image(s) as general reference.`;
+        allImageFilesForPrompt.push(...referenceImages);
+      }
+      
+      const promptGenerationParts = await Promise.all(
+        allImageFilesForPrompt.map(fileToGenerativePart)
       );
       
       let finalPromptText = '';
 
       if (generationMode !== GenerationMode.ImageOnly) {
-        const content = await generatePowerPrompt(brief, imageParts);
+        const content = await generatePowerPrompt(briefWithContext, promptGenerationParts);
         setGeneratedContent(content);
         finalPromptText = content.finalPrompt;
       } else {
         // For image-only, we still need to generate the prompt behind the scenes
-        const content = await generatePowerPrompt(brief, imageParts);
+        const content = await generatePowerPrompt(briefWithContext, promptGenerationParts);
         finalPromptText = `${content.finalPrompt}\nResponse Modalities: Image`;
       }
       
       if (generationMode !== GenerationMode.PromptOnly) {
-        const images = await generateImages(finalPromptText, imageCount, imageParts);
+        // Construct parts specifically for the image generation step.
+        // Reference images have already been "baked into" the final prompt,
+        // so they should not be sent to the image generation model.
+        // Only background and edit images, which are the canvas for generation, should be sent.
+        const imageGenerationFiles: File[] = [];
+        if (backgroundImage) {
+          imageGenerationFiles.push(backgroundImage);
+        }
+        if (editImage) {
+          imageGenerationFiles.push(editImage);
+        }
+
+        const imageGenerationParts = await Promise.all(
+            imageGenerationFiles.map(fileToGenerativePart)
+        );
+
+        const images = await generateImages(finalPromptText, imageCount, imageGenerationParts);
         setGeneratedImages(images);
       }
     } catch (e: unknown) {
@@ -76,7 +111,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [brief, generationMode, uploadedImages, imageCount]);
+  }, [brief, generationMode, referenceImages, backgroundImage, editImage, imageCount]);
 
   return (
     <div className="min-h-screen bg-brand-bg font-sans text-brand-text">
@@ -98,8 +133,12 @@ const App: React.FC = () => {
             setGenerationMode={setGenerationMode}
             onGenerate={handleGenerate}
             isLoading={isLoading}
-            images={uploadedImages}
-            setImages={setUploadedImages}
+            referenceImages={referenceImages}
+            setReferenceImages={setReferenceImages}
+            backgroundImage={backgroundImage}
+            setBackgroundImage={setBackgroundImage}
+            editImage={editImage}
+            setEditImage={setEditImage}
             imageCount={imageCount}
             setImageCount={setImageCount}
           />
