@@ -20,6 +20,8 @@ interface PromptInputProps {
   setEditImage: (image: File | null) => void;
   baseImage: File | null;
   setBaseImage: (image: File | null) => void;
+  relatedImageBase: File | null;
+  setRelatedImageBase: (image: File | null) => void;
   maskImage: File | null;
   setMaskImage: (image: File | null) => void;
   imageCount: number;
@@ -70,12 +72,20 @@ const PromptInput: React.FC<PromptInputProps> = ({
   setEditImage,
   baseImage,
   setBaseImage,
+  relatedImageBase,
+  setRelatedImageBase,
   maskImage,
   setMaskImage,
   imageCount,
   setImageCount,
 }) => {
   const isImageGenerationDisabled = generationMode === GenerationMode.PromptOnly;
+
+  // Logic to disable mutually exclusive main image uploaders
+  const disableBackgroundImage = !!baseImage || !!relatedImageBase;
+  const disableBaseImage = !!backgroundImage || !!relatedImageBase;
+  const disableRelatedImage = !!backgroundImage || !!baseImage;
+
 
   return (
     <div className="bg-brand-surface rounded-xl p-6 shadow-lg border border-white/10">
@@ -95,8 +105,23 @@ const PromptInput: React.FC<PromptInputProps> = ({
         <h3 className="block text-lg font-semibold mb-3 text-brand-text">
           1.5 (Optional) Provide Images
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {!editImage && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {editImage ? (
+            <div className="md:col-span-2 bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <MaskEditor 
+                imageFile={editImage}
+                editBrief={editBrief}
+                setEditBrief={setEditBrief}
+                onImageRemove={() => {
+                  setEditImage(null);
+                  setMaskImage(null);
+                  setEditBrief('');
+                }}
+                onMaskUpdate={setMaskImage}
+                isLoading={isLoading}
+              />
+            </div>
+          ) : (
             <>
               <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
@@ -106,6 +131,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
                   setFiles={(newFiles) => setBackgroundImage(newFiles[0] || null)}
                   maxFiles={1}
                   isLoading={isLoading}
+                  disabled={disableBackgroundImage}
                 />
               </div>
 
@@ -128,29 +154,25 @@ const PromptInput: React.FC<PromptInputProps> = ({
                   setFiles={(newFiles) => setBaseImage(newFiles[0] || null)}
                   maxFiles={1}
                   isLoading={isLoading}
+                  disabled={disableBaseImage}
                 />
               </div>
+              
+              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                <ImageUploader
+                    title="Generate Related Scenes"
+                    description="Upload a context image (e.g., building exterior) to generate related scenes (e.g., interior views)."
+                    files={relatedImageBase ? [relatedImageBase] : []}
+                    setFiles={(newFiles) => setRelatedImageBase(newFiles[0] || null)}
+                    maxFiles={1}
+                    isLoading={isLoading}
+                    disabled={disableRelatedImage}
+                />
+            </div>
             </>
           )}
           
-          {editImage && (
-            <div className="md:col-span-3 bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
-                <MaskEditor 
-                  imageFile={editImage}
-                  editBrief={editBrief}
-                  setEditBrief={setEditBrief}
-                  onImageRemove={() => {
-                    setEditImage(null);
-                    setMaskImage(null);
-                    setEditBrief('');
-                  }}
-                  onMaskUpdate={setMaskImage}
-                  isLoading={isLoading}
-                />
-            </div>
-          )}
-
-          <div className="md:col-span-3 bg-brand-bg border border-white/10 rounded-lg p-4 mt-2">
+          <div className="md:col-span-2 bg-brand-bg border border-white/10 rounded-lg p-4">
             <ImageUploader
               title="Image Cues"
               description="Provide style or content examples (Max 3)."
@@ -189,42 +211,43 @@ const PromptInput: React.FC<PromptInputProps> = ({
             value={GenerationMode.ImageOnly}
             currentValue={generationMode}
             onChange={(e) => setGenerationMode(e.target.value as GenerationMode)}
-            label="Images Only"
-            description="Directly generate images from your brief."
-            disabled={isLoading}
+            label="Image Only (Fast)"
+            description="Use a direct prompt for faster image results."
+            disabled={isLoading || !brief.trim()}
           />
         </div>
       </div>
 
-      <div className="mt-6">
-        <h3 className="block text-lg font-semibold mb-3 text-brand-text">3. Number of Images</h3>
-        <div className={`p-4 rounded-lg bg-brand-bg border border-white/20 transition-opacity ${isImageGenerationDisabled ? 'opacity-50' : ''}`}>
-            <label htmlFor="image-count-slider" className="block text-sm font-medium text-brand-subtle">Number of Images</label>
-            <div className="flex items-center gap-4 mt-2">
-                <input
-                    id="image-count-slider"
-                    type="range"
-                    min="1"
-                    max="4"
-                    step="1"
-                    value={imageCount}
-                    onChange={(e) => setImageCount(parseInt(e.target.value, 10))}
-                    disabled={isLoading || isImageGenerationDisabled}
-                    className="w-full h-2 bg-brand-surface rounded-lg appearance-none cursor-pointer accent-banana-yellow disabled:cursor-not-allowed disabled:opacity-70"
-                />
-                <span className="font-mono text-lg text-banana-yellow w-4 text-center">{imageCount}</span>
-            </div>
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+            <label htmlFor="image-count" className="text-sm font-medium text-brand-subtle whitespace-nowrap">Number of Images:</label>
+            <input
+                id="image-count"
+                type="range"
+                min="1"
+                max="8"
+                value={imageCount}
+                onChange={(e) => setImageCount(Number(e.target.value))}
+                disabled={isLoading || isImageGenerationDisabled}
+                className="w-full h-2 bg-brand-bg rounded-lg appearance-none cursor-pointer accent-banana-yellow disabled:opacity-50"
+            />
+            <span className="font-semibold text-brand-text w-4 text-center">{imageCount}</span>
         </div>
-      </div>
 
-
-      <div className="mt-8 text-center">
         <button
-          onClick={onGenerate}
-          disabled={isLoading || (!brief.trim() && !editImage) || (editImage && !editBrief.trim())}
-          className="w-full md:w-auto bg-banana-yellow text-black font-bold py-3 px-12 rounded-full text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100"
+            onClick={onGenerate}
+            disabled={isLoading || (!brief.trim() && !editImage)}
+            className="w-full sm:w-auto bg-banana-yellow text-black font-bold py-3 px-8 rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
-          {isLoading ? 'Generating...' : '✨ Orchestrate'}
+            {isLoading ? (
+                <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                </>
+            ) : 'Generate'}
         </button>
       </div>
     </div>

@@ -2,10 +2,12 @@ import React from 'react';
 
 interface ImageGridProps {
   images: string[];
+  onImageClick: (src: string) => void;
 }
 
-const ImageGrid: React.FC<ImageGridProps> = ({ images }) => {
-  const handleDownload = (src: string, index: number) => {
+const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick }) => {
+  const handleDownload = (e: React.MouseEvent, src: string, index: number) => {
+    e.stopPropagation(); // Prevent modal from opening
     const link = document.createElement('a');
     link.href = src;
     
@@ -22,14 +24,22 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {images.map((src, index) => (
-        <div key={index} className="relative group aspect-square bg-brand-bg rounded-lg overflow-hidden border border-white/10">
+        <div 
+          key={index} 
+          className="relative group aspect-square bg-brand-bg rounded-lg overflow-hidden border border-white/10 cursor-pointer"
+          onClick={() => onImageClick(src)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onImageClick(src); }}
+          aria-label={`View larger image ${index + 1}`}
+        >
           <img
             src={src}
             alt={`Generated image ${index + 1}`}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <button
-            onClick={() => handleDownload(src, index)}
+            onClick={(e) => handleDownload(e, src, index)}
             className="absolute bottom-2 right-2 bg-black/60 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-black/80"
             aria-label={`Download image ${index + 1}`}
           >

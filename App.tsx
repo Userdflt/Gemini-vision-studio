@@ -36,6 +36,7 @@ const App: React.FC = () => {
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [editImage, setEditImage] = useState<File | null>(null);
   const [baseImage, setBaseImage] = useState<File | null>(null);
+  const [relatedImageBase, setRelatedImageBase] = useState<File | null>(null);
   const [maskImage, setMaskImage] = useState<File | null>(null);
   const [imageCount, setImageCount] = useState<number>(4);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -74,6 +75,10 @@ const App: React.FC = () => {
         briefWithContext += "\n\n[Instruction] Use the following image as the structural base for an image-to-image generation. Transform it based on the brief.";
         allImageFilesForPrompt.push(baseImage);
       }
+      if (relatedImageBase) {
+        briefWithContext += "\n\n[Instruction] Use the following image as the primary context. Generate new scenes or concepts that are thematically and stylistically related to it, based on the brief. For example, if the image is a building's exterior, the brief might ask for interior views.";
+        allImageFilesForPrompt.push(relatedImageBase);
+      }
       if (editImage) {
         briefWithContext += `\n\n[Instruction for Edit] The following instruction applies ONLY to the provided 'Image to Edit': "${editBrief}"`;
         briefWithContext += "\n\n[Context for Edit] A mask has been provided to specify the exact area for editing. Your primary task is to semantically understand the masked location and apply the 'Instruction for Edit' to that location.";
@@ -105,13 +110,15 @@ const App: React.FC = () => {
       
       if (generationMode !== GenerationMode.PromptOnly) {
         // For the image generation model, we must be selective about which images we send.
-        // The priority is: Edit > Base > Background.
+        // The priority is: Edit > Base > Related > Background.
         // Image Cues are now ONLY used for the prompt generation stage.
         const imageGenerationFiles: File[] = [];
         if (editImage) {
             imageGenerationFiles.push(editImage);
         } else if (baseImage) {
             imageGenerationFiles.push(baseImage);
+        } else if (relatedImageBase) {
+            imageGenerationFiles.push(relatedImageBase);
         } else if (backgroundImage) {
             imageGenerationFiles.push(backgroundImage);
         }
@@ -129,7 +136,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [brief, editBrief, generationMode, referenceImages, backgroundImage, editImage, baseImage, maskImage, imageCount]);
+  }, [brief, editBrief, generationMode, referenceImages, backgroundImage, editImage, baseImage, relatedImageBase, maskImage, imageCount]);
 
   return (
     <div className="min-h-screen bg-brand-bg font-sans text-brand-text">
@@ -161,6 +168,8 @@ const App: React.FC = () => {
             setEditImage={setEditImage}
             baseImage={baseImage}
             setBaseImage={setBaseImage}
+            relatedImageBase={relatedImageBase}
+            setRelatedImageBase={setRelatedImageBase}
             maskImage={maskImage}
             setMaskImage={setMaskImage}
             imageCount={imageCount}
