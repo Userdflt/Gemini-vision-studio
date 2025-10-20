@@ -30,10 +30,13 @@ const fileToGenerativePart = async (file: File): Promise<Part> => {
 
 const App: React.FC = () => {
   const [brief, setBrief] = useState<string>('');
+  const [editBrief, setEditBrief] = useState<string>('');
   const [generationMode, setGenerationMode] = useState<GenerationMode>(GenerationMode.PromptAndImage);
   const [referenceImages, setReferenceImages] = useState<File[]>([]);
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [editImage, setEditImage] = useState<File | null>(null);
+  const [baseImage, setBaseImage] = useState<File | null>(null);
+  const [maskImage, setMaskImage] = useState<File | null>(null);
   const [imageCount, setImageCount] = useState<number>(4);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +44,17 @@ const App: React.FC = () => {
   const [generatedImages, setGeneratedImages] = useState<string[] | null>(null);
 
   const handleGenerate = useCallback(async () => {
-    if (!brief.trim()) {
+    if (!brief.trim() && !editImage) {
       setError('Please enter a brief.');
       return;
+    }
+    if (editImage && !editBrief.trim()) {
+      setError('Please describe what you want to change for the masked image.');
+      return;
+    }
+    if (editImage && baseImage) {
+        setError('Please provide either an Image to Edit or a Base Image, but not both.');
+        return;
     }
 
     setIsLoading(true);
@@ -55,17 +66,24 @@ const App: React.FC = () => {
       let briefWithContext = brief;
       const allImageFilesForPrompt: File[] = [];
 
-      // The order is important for the model to associate text with the following image
       if (backgroundImage) {
         briefWithContext += "\n\n[Instruction] Use the following image as the background for the generation.";
         allImageFilesForPrompt.push(backgroundImage);
       }
+      if (baseImage) {
+        briefWithContext += "\n\n[Instruction] Use the following image as the structural base for an image-to-image generation. Transform it based on the brief.";
+        allImageFilesForPrompt.push(baseImage);
+      }
       if (editImage) {
-        briefWithContext += "\n\n[Instruction] The user wants to edit or inpaint the following image based on the brief.";
+        briefWithContext += `\n\n[Instruction for Edit] The following instruction applies ONLY to the provided 'Image to Edit': "${editBrief}"`;
+        briefWithContext += "\n\n[Context for Edit] A mask has been provided to specify the exact area for editing. Your primary task is to semantically understand the masked location and apply the 'Instruction for Edit' to that location.";
         allImageFilesForPrompt.push(editImage);
+        if (maskImage) {
+            allImageFilesForPrompt.push(maskImage);
+        }
       }
       if (referenceImages.length > 0) {
-        briefWithContext += `\n\n[Instruction] Use the following ${referenceImages.length} image(s) as general reference.`;
+        briefWithContext += `\n\n[Instruction] Use the following ${referenceImages.length} image(s) as general style and content cues.`;
         allImageFilesForPrompt.push(...referenceImages);
       }
       
@@ -86,16 +104,16 @@ const App: React.FC = () => {
       }
       
       if (generationMode !== GenerationMode.PromptOnly) {
-        // Construct parts specifically for the image generation step.
-        // Reference images have already been "baked into" the final prompt,
-        // so they should not be sent to the image generation model.
-        // Only background and edit images, which are the canvas for generation, should be sent.
+        // For the image generation model, we must be selective about which images we send.
+        // The priority is: Edit > Base > Background.
+        // Image Cues are now ONLY used for the prompt generation stage.
         const imageGenerationFiles: File[] = [];
-        if (backgroundImage) {
-          imageGenerationFiles.push(backgroundImage);
-        }
         if (editImage) {
-          imageGenerationFiles.push(editImage);
+            imageGenerationFiles.push(editImage);
+        } else if (baseImage) {
+            imageGenerationFiles.push(baseImage);
+        } else if (backgroundImage) {
+            imageGenerationFiles.push(backgroundImage);
         }
 
         const imageGenerationParts = await Promise.all(
@@ -111,7 +129,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [brief, generationMode, referenceImages, backgroundImage, editImage, imageCount]);
+  }, [brief, editBrief, generationMode, referenceImages, backgroundImage, editImage, baseImage, maskImage, imageCount]);
 
   return (
     <div className="min-h-screen bg-brand-bg font-sans text-brand-text">
@@ -129,6 +147,8 @@ const App: React.FC = () => {
           <PromptInput
             brief={brief}
             setBrief={setBrief}
+            editBrief={editBrief}
+            setEditBrief={setEditBrief}
             generationMode={generationMode}
             setGenerationMode={setGenerationMode}
             onGenerate={handleGenerate}
@@ -139,6 +159,10 @@ const App: React.FC = () => {
             setBackgroundImage={setBackgroundImage}
             editImage={editImage}
             setEditImage={setEditImage}
+            baseImage={baseImage}
+            setBaseImage={setBaseImage}
+            maskImage={maskImage}
+            setMaskImage={setMaskImage}
             imageCount={imageCount}
             setImageCount={setImageCount}
           />

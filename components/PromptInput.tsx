@@ -1,9 +1,13 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { GenerationMode } from '../types';
+import ImageUploader from './ImageUploader';
+import MaskEditor from './MaskEditor';
 
 interface PromptInputProps {
   brief: string;
   setBrief: (brief: string) => void;
+  editBrief: string;
+  setEditBrief: (brief: string) => void;
   generationMode: GenerationMode;
   setGenerationMode: (mode: GenerationMode) => void;
   onGenerate: () => void;
@@ -14,6 +18,10 @@ interface PromptInputProps {
   setBackgroundImage: (image: File | null) => void;
   editImage: File | null;
   setEditImage: (image: File | null) => void;
+  baseImage: File | null;
+  setBaseImage: (image: File | null) => void;
+  maskImage: File | null;
+  setMaskImage: (image: File | null) => void;
   imageCount: number;
   setImageCount: (count: number) => void;
 }
@@ -45,89 +53,11 @@ const RadioOption: React.FC<{
   </label>
 );
 
-interface ImageUploaderProps {
-  title: string;
-  description: string;
-  files: File[];
-  setFiles: (files: File[]) => void;
-  maxFiles: number;
-  isLoading: boolean;
-}
-
-const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files, setFiles, maxFiles, isLoading }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const canUpload = files.length < maxFiles;
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      const combined = [...files, ...selectedFiles].slice(0, maxFiles);
-      setFiles(combined);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  const handleRemoveImage = (indexToRemove: number) => {
-    setFiles(files.filter((_, index) => index !== indexToRemove));
-  };
-
-  return (
-    <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
-      <h4 className="font-semibold text-brand-text">{title}</h4>
-      <p className="text-sm text-brand-subtle mb-2">{description}</p>
-      
-      {files.length > 0 && (
-        <div className={`grid gap-2 my-2 ${maxFiles > 1 ? 'grid-cols-3' : 'grid-cols-1'}`}>
-          {files.map((file, index) => (
-            <div key={`${file.name}-${index}`} className="relative group aspect-square">
-              <img 
-                src={URL.createObjectURL(file)} 
-                alt={`preview ${index}`}
-                className="w-full h-full object-cover rounded-md"
-                onLoad={e => URL.revokeObjectURL(e.currentTarget.src)}
-              />
-              <button 
-                onClick={() => handleRemoveImage(index)}
-                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
-                aria-label="Remove image"
-                disabled={isLoading}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {canUpload && (
-         <div 
-          className="mt-auto w-full p-4 border-2 border-dashed border-brand-subtle rounded-lg text-center transition-colors cursor-pointer hover:border-banana-yellow hover:bg-brand-surface/50"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange}
-            multiple={maxFiles > 1}
-            accept="image/*" 
-            className="hidden" 
-            disabled={isLoading || !canUpload}
-          />
-          <p className="text-brand-subtle text-sm">Click to upload</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
 const PromptInput: React.FC<PromptInputProps> = ({
   brief,
   setBrief,
+  editBrief,
+  setEditBrief,
   generationMode,
   setGenerationMode,
   onGenerate,
@@ -138,6 +68,10 @@ const PromptInput: React.FC<PromptInputProps> = ({
   setBackgroundImage,
   editImage,
   setEditImage,
+  baseImage,
+  setBaseImage,
+  maskImage,
+  setMaskImage,
   imageCount,
   setImageCount,
 }) => {
@@ -152,7 +86,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
         id="brief-input"
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
-        placeholder="e.g., A photorealistic image of a cat astronaut exploring Mars. If editing, describe the change, like 'add a red bow'."
+        placeholder="e.g., A photorealistic image of a cat astronaut exploring Mars. This brief provides general context."
         className="w-full h-32 p-3 bg-brand-bg border border-white/20 rounded-lg focus:ring-2 focus:ring-banana-yellow focus:border-banana-yellow transition-colors placeholder:text-brand-subtle"
         disabled={isLoading}
       />
@@ -161,26 +95,64 @@ const PromptInput: React.FC<PromptInputProps> = ({
         <h3 className="block text-lg font-semibold mb-3 text-brand-text">
           1.5 (Optional) Provide Images
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ImageUploader
-            title="Add a Background"
-            description="Set the scene for your image."
-            files={backgroundImage ? [backgroundImage] : []}
-            setFiles={(newFiles) => setBackgroundImage(newFiles[0] || null)}
-            maxFiles={1}
-            isLoading={isLoading}
-          />
-          <ImageUploader
-            title="Image to Edit"
-            description="Inpaint or modify an existing image."
-            files={editImage ? [editImage] : []}
-            setFiles={(newFiles) => setEditImage(newFiles[0] || null)}
-            maxFiles={1}
-            isLoading={isLoading}
-          />
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {!editImage && (
+            <>
+              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                <ImageUploader
+                  title="Add a Background"
+                  description="Set the scene for your image."
+                  files={backgroundImage ? [backgroundImage] : []}
+                  setFiles={(newFiles) => setBackgroundImage(newFiles[0] || null)}
+                  maxFiles={1}
+                  isLoading={isLoading}
+                />
+              </div>
+
+              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                  <ImageUploader
+                    title="Image to Edit & Mask"
+                    description="Inpaint or modify a selected area."
+                    files={[]}
+                    setFiles={(newFiles) => setEditImage(newFiles[0] || null)}
+                    maxFiles={1}
+                    isLoading={isLoading}
+                  />
+              </div>
+
+              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                <ImageUploader
+                  title="Base Image"
+                  description="Sketch-to-image or style transfer."
+                  files={baseImage ? [baseImage] : []}
+                  setFiles={(newFiles) => setBaseImage(newFiles[0] || null)}
+                  maxFiles={1}
+                  isLoading={isLoading}
+                />
+              </div>
+            </>
+          )}
+          
+          {editImage && (
+            <div className="md:col-span-3 bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                <MaskEditor 
+                  imageFile={editImage}
+                  editBrief={editBrief}
+                  setEditBrief={setEditBrief}
+                  onImageRemove={() => {
+                    setEditImage(null);
+                    setMaskImage(null);
+                    setEditBrief('');
+                  }}
+                  onMaskUpdate={setMaskImage}
+                  isLoading={isLoading}
+                />
+            </div>
+          )}
+
+          <div className="md:col-span-3 bg-brand-bg border border-white/10 rounded-lg p-4 mt-2">
             <ImageUploader
-              title="Reference Images"
+              title="Image Cues"
               description="Provide style or content examples (Max 3)."
               files={referenceImages}
               setFiles={setReferenceImages}
@@ -249,7 +221,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
       <div className="mt-8 text-center">
         <button
           onClick={onGenerate}
-          disabled={isLoading || !brief.trim()}
+          disabled={isLoading || (!brief.trim() && !editImage) || (editImage && !editBrief.trim())}
           className="w-full md:w-auto bg-banana-yellow text-black font-bold py-3 px-12 rounded-full text-lg hover:bg-yellow-400 transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:scale-100"
         >
           {isLoading ? 'Generating...' : '✨ Orchestrate'}
