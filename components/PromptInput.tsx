@@ -18,8 +18,10 @@ interface PromptInputProps {
   setBackgroundImage: (image: File | null) => void;
   editImage: File | null;
   setEditImage: (image: File | null) => void;
-  baseImage: File | null;
-  setBaseImage: (image: File | null) => void;
+  sketchImage: File | null;
+  setSketchImage: (image: File | null) => void;
+  floorplanImage: File | null;
+  setFloorplanImage: (image: File | null) => void;
   relatedImageBase: File | null;
   setRelatedImageBase: (image: File | null) => void;
   maskImage: File | null;
@@ -70,8 +72,10 @@ const PromptInput: React.FC<PromptInputProps> = ({
   setBackgroundImage,
   editImage,
   setEditImage,
-  baseImage,
-  setBaseImage,
+  sketchImage,
+  setSketchImage,
+  floorplanImage,
+  setFloorplanImage,
   relatedImageBase,
   setRelatedImageBase,
   maskImage,
@@ -82,9 +86,11 @@ const PromptInput: React.FC<PromptInputProps> = ({
   const isImageGenerationDisabled = generationMode === GenerationMode.PromptOnly;
 
   // Logic to disable mutually exclusive main image uploaders
-  const disableBackgroundImage = !!baseImage || !!relatedImageBase;
-  const disableBaseImage = !!backgroundImage || !!relatedImageBase;
-  const disableRelatedImage = !!backgroundImage || !!baseImage;
+  const hasBaseImage = !!sketchImage || !!floorplanImage;
+  const disableBackgroundImage = hasBaseImage || !!relatedImageBase;
+  const disableSketchImage = !!backgroundImage || !!relatedImageBase || !!floorplanImage;
+  const disableFloorplanImage = !!backgroundImage || !!relatedImageBase || !!sketchImage;
+  const disableRelatedImage = !!backgroundImage || hasBaseImage;
 
 
   return (
@@ -126,7 +132,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
               <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
                   title="Add a Background"
-                  description="Set the scene for your image."
+                  description="Image to use as the background."
                   files={backgroundImage ? [backgroundImage] : []}
                   setFiles={(newFiles) => setBackgroundImage(newFiles[0] || null)}
                   maxFiles={1}
@@ -138,7 +144,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
               <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
                   <ImageUploader
                     title="Image to Edit & Mask"
-                    description="Inpaint or modify a selected area."
+                    description="Upload an image to edit or inpaint."
                     files={[]}
                     setFiles={(newFiles) => setEditImage(newFiles[0] || null)}
                     maxFiles={1}
@@ -148,20 +154,32 @@ const PromptInput: React.FC<PromptInputProps> = ({
 
               <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
-                  title="Base Image"
-                  description="Sketch-to-image or style transfer."
-                  files={baseImage ? [baseImage] : []}
-                  setFiles={(newFiles) => setBaseImage(newFiles[0] || null)}
+                  title="Base Image (Sketch/Photo)"
+                  description="Transform a sketch or photo."
+                  files={sketchImage ? [sketchImage] : []}
+                  setFiles={(newFiles) => setSketchImage(newFiles[0] || null)}
                   maxFiles={1}
                   isLoading={isLoading}
-                  disabled={disableBaseImage}
+                  disabled={disableSketchImage}
+                />
+              </div>
+
+              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+                <ImageUploader
+                  title="Base Image (Floor Plan) WIP"
+                  description="Visualize from a floor plan - currently testing"
+                  files={floorplanImage ? [floorplanImage] : []}
+                  setFiles={(newFiles) => setFloorplanImage(newFiles[0] || null)}
+                  maxFiles={1}
+                  isLoading={isLoading}
+                  disabled={disableFloorplanImage}
                 />
               </div>
               
               <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
                     title="Generate Related Scenes"
-                    description="Upload a context image (e.g., building exterior) to generate related scenes (e.g., interior views)."
+                    description="Generate new scenes based on this image."
                     files={relatedImageBase ? [relatedImageBase] : []}
                     setFiles={(newFiles) => setRelatedImageBase(newFiles[0] || null)}
                     maxFiles={1}
@@ -175,7 +193,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
           <div className="md:col-span-2 bg-brand-bg border border-white/10 rounded-lg p-4">
             <ImageUploader
               title="Image Cues"
-              description="Provide style or content examples (Max 3)."
+              description="Use as style and content references (Max 3)."
               files={referenceImages}
               setFiles={setReferenceImages}
               maxFiles={3}
@@ -218,37 +236,42 @@ const PromptInput: React.FC<PromptInputProps> = ({
         </div>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-            <label htmlFor="image-count" className="text-sm font-medium text-brand-subtle whitespace-nowrap">Number of Images:</label>
-            <input
-                id="image-count"
-                type="range"
-                min="1"
-                max="8"
-                value={imageCount}
-                onChange={(e) => setImageCount(Number(e.target.value))}
-                disabled={isLoading || isImageGenerationDisabled}
-                className="w-full h-2 bg-brand-bg rounded-lg appearance-none cursor-pointer accent-banana-yellow disabled:opacity-50"
-            />
-            <span className="font-semibold text-brand-text w-4 text-center">{imageCount}</span>
+      <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="w-full md:w-auto flex-grow">
+            <div className="flex items-center gap-3 max-w-sm mx-auto md:mx-0">
+                <label htmlFor="image-count" className="text-sm font-medium text-brand-subtle whitespace-nowrap">Number of Images:</label>
+                <input
+                    id="image-count"
+                    type="range"
+                    min="1"
+                    max="8"
+                    step="1"
+                    value={imageCount}
+                    onChange={(e) => setImageCount(Number(e.target.value))}
+                    disabled={isLoading || isImageGenerationDisabled}
+                    className="w-full h-2 bg-brand-bg rounded-lg appearance-none cursor-pointer accent-banana-yellow disabled:opacity-50"
+                />
+                <span className="font-semibold text-brand-text w-4 text-center">{imageCount}</span>
+            </div>
         </div>
 
-        <button
-            onClick={onGenerate}
-            disabled={isLoading || (!brief.trim() && !editImage)}
-            className="w-full sm:w-auto bg-banana-yellow text-black font-bold py-3 px-8 rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-        >
-            {isLoading ? (
-                <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Generating...
-                </>
-            ) : 'Generate'}
-        </button>
+        <div className="w-full md:w-auto flex items-center gap-2">
+            <button
+                onClick={onGenerate}
+                disabled={isLoading || (!brief.trim() && !editImage)}
+                className="w-full md:w-auto flex-grow bg-banana-yellow text-black font-bold py-3 px-8 rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+                {isLoading ? (
+                    <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating...
+                    </>
+                ) : 'Generate'}
+            </button>
+        </div>
       </div>
     </div>
   );
