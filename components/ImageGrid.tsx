@@ -15,7 +15,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick }) => {
     const mimeType = src.match(/data:([^;]+);/)?.[1] ?? 'image/png';
     const extension = mimeType.split('/')[1] ?? 'png';
     
-    link.download = `nano-banana-image-${index + 1}.${extension}`;
+    link.download = `vision-studio-image-${index + 1}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

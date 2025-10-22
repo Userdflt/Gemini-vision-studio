@@ -266,7 +266,7 @@ const App: React.FC = () => {
       <main className="max-w-4xl mx-auto p-4 md:p-8">
         <header className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Nano Banana <span className="text-banana-yellow">Power Prompt</span>
+            Gemini <span className="text-banana-yellow">Vision Studio</span>
           </h1>
           <p className="text-lg text-brand-subtle mt-2">
             Turn your simple idea into a professional image prompt, then generate stunning visuals.
