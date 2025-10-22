@@ -87,6 +87,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
   }, [brushSize]);
 
   const startDrawing = useCallback((e: MouseEvent | TouchEvent) => {
+    e.preventDefault(); // Prevents page scrolling on touch devices
     isDrawing.current = true;
     lastPoint.current = null;
     draw(e);
@@ -107,6 +108,8 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
     onMaskUpdate(null);
   }, [onMaskUpdate]);
 
+  // Effect for setting up canvas and drawing the initial image.
+  // This runs only when the imageFile changes.
   useEffect(() => {
     const container = containerRef.current;
     const imageCanvas = imageCanvasRef.current;
@@ -119,6 +122,9 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
     img.src = URL.createObjectURL(imageFile);
     img.onload = () => {
       const containerWidth = container.clientWidth;
+      // Guard against container not being rendered yet
+      if (containerWidth === 0) return; 
+
       const scale = containerWidth / img.naturalWidth;
       const width = containerWidth;
       const height = img.naturalHeight * scale;
@@ -134,27 +140,39 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
       }
       URL.revokeObjectURL(img.src);
     };
+  }, [imageFile]);
 
-    drawingCanvas.addEventListener('mousedown', startDrawing);
-    drawingCanvas.addEventListener('mousemove', draw);
-    drawingCanvas.addEventListener('mouseup', stopDrawing);
-    drawingCanvas.addEventListener('mouseleave', stopDrawing);
+  // Effect for setting up and tearing down event listeners.
+  // This re-runs when draw handlers change (e.g., due to brushSize changing),
+  // but it does not clear the canvas.
+  useEffect(() => {
+    const canvas = drawingCanvasRef.current;
+    if (!canvas) return;
+
+    const handleStart = (e: MouseEvent | TouchEvent) => startDrawing(e);
+    const handleMove = (e: MouseEvent | TouchEvent) => draw(e);
+    const handleEnd = () => stopDrawing();
+
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleEnd);
+    canvas.addEventListener('mouseleave', handleEnd);
     
-    drawingCanvas.addEventListener('touchstart', startDrawing, { passive: false });
-    drawingCanvas.addEventListener('touchmove', draw, { passive: false });
-    drawingCanvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('touchend', handleEnd);
 
     return () => {
-      drawingCanvas.removeEventListener('mousedown', startDrawing);
-      drawingCanvas.removeEventListener('mousemove', draw);
-      drawingCanvas.removeEventListener('mouseup', stopDrawing);
-      drawingCanvas.removeEventListener('mouseleave', stopDrawing);
+      canvas.removeEventListener('mousedown', handleStart);
+      canvas.removeEventListener('mousemove', handleMove);
+      canvas.removeEventListener('mouseup', handleEnd);
+      canvas.removeEventListener('mouseleave', handleEnd);
 
-      drawingCanvas.removeEventListener('touchstart', startDrawing);
-      drawingCanvas.removeEventListener('touchmove', draw);
-      drawingCanvas.removeEventListener('touchend', stopDrawing);
+      canvas.removeEventListener('touchstart', handleStart);
+      canvas.removeEventListener('touchmove', handleMove);
+      canvas.removeEventListener('touchend', handleEnd);
     };
-  }, [imageFile, startDrawing, draw, stopDrawing]);
+  }, [startDrawing, draw, stopDrawing]);
 
 
   return (
@@ -215,6 +233,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
             disabled={isLoading}
             className="w-full h-2 bg-brand-surface rounded-lg appearance-none cursor-pointer accent-banana-yellow"
           />
+          <span className="font-semibold text-brand-text w-8 text-center">{brushSize}</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <button 
