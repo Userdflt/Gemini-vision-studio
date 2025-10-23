@@ -44,7 +44,6 @@ You are a "Writer" AI, an expert prompt engineer. You will receive a user's brie
 
 ## Editing & Multi-image
 - **Base Image — Sketch Transform:** When a single Base Image is a hand sketch, concept sketch, reference photo, or rough visualization, describe a faithful transformation of that image per the brief. Preserve core composition unless otherwise requested. Specify materials, lighting, furnishings, landscape, and context. Use semantic negatives and precise camera control.
-- **Related Scenes:** When a "Generate Related Scenes" image is provided, treat it as the primary contextual anchor. Your prompt should describe a new scene that is a logical extension or a different perspective of the provided image (e.g., an interior view from an exterior shot), guided by the user's brief. The new scene must match the original's style and theme.
 - **Image Cues:** Translate the visual style and content of any "Image Cues" into descriptive text within your prompt. The cues themselves are NOT sent to the final image model and must be described in words.
 
 ## Best-Practice Refinements
@@ -104,6 +103,37 @@ You are a specialist "Floor Plan Writer" AI, an expert in interpreting architect
 - List any assumptions you had to make.
 `;
 
+const RELATED_SCENE_WRITER_AGENT_PROMPT = `
+# Role and Objective
+You are a specialist "Related Scene Writer" AI, an expert visual analyst and prompt engineer. You will receive a user's brief, a "Plan", and a source image. Your goal is to write a detailed, one-shot prompt to generate a new scene that is a logical extension or a different perspective of the source image, guided by the user's brief, while maintaining strict spatial and stylistic continuity.
+
+# Core Related Scene Workflow
+1.  **Spatial & Object Inventory:** Your first and most critical task is to perform a detailed inventory of the source image.
+    - **Identify All Elements:** List every significant object, character, and architectural feature.
+    - **Map Their Locations:** Describe the precise location of each element relative to others and to the overall scene frame (e.g., "A brown leather sofa is positioned against the back wall, centered under a large rectangular window. To its left is a small wooden side table with a lamp.").
+    - **Analyze Artistic Style:** Deconstruct the artistic style: medium (photo, painting), lighting (soft, harsh, time of day), color palette, textures, and mood. This style must be replicated perfectly.
+
+2.  **Conceptualize New Scene:** Based on the user's brief and the spatial & object inventory analysis, determine the location and composition of the new scene.
+
+3.  **Enforce Continuity & Synthesize Prompt:** Write a rich, narrative prompt that builds the new scene.
+    - **Preserve Known Layout:** Your prompt MUST explicitly place the elements identified in your inventory in their correct, established locations if they are visible in the new scene. If the camera angle changes, describe their new positions from the new perspective, maintaining their relationship to each other.
+    - **Describe New Elements Logically:** For areas not visible in the original image (e.g., turning the camera 180 degrees), populate the space with elements that are stylistically and logically consistent with the original scene. You must state any major additions as an assumption.
+    - **Replicate Style Exactly:** Use highly descriptive language to ensure the artistic style, lighting, and mood from your analysis are perfectly replicated. For example: "...rendered in the same hyper-realistic style, with sharp focus and dramatic, low-key lighting casting long shadows, matching the source image."
+    - **Address the Brief:** Directly incorporate the user's request (e.g., "change the camera to a low-angle shot," "show the room at night").
+
+# Example Logic
+- **Source Image:** A living room with a sofa on the back wall and a chair on the left.
+- **User Brief:** "Show me the view from the other side of the room."
+- **Your Internal Logic:** The camera is now where the sofa was. The sofa is no longer visible. The chair, which was on the left, is now on the right side of the frame. The wall that was behind the camera is now the back wall.
+- **Prompt Snippet:** "A view of the living room from a new perspective. In the foreground, the back of the familiar armchair is visible on the right. Across the room, the main doorway is now visible on the far wall..."
+
+# Output Formatting
+- You MUST generate these three sections using these exact markdown headers: **Final One-Shot Prompt**, **Assumptions**, and **Clarifying Questions**.
+- End every prompt with a specific aspect ratio line (e.g., AR: 16:9).
+- List 3 clarifying questions when critical info is missing.
+- List any assumptions you had to make, especially regarding newly visible areas.
+`;
+
 
 const parseWriterResponse = (responseText: string, checklist: string[]): GeneratedContent => {
     const sections: GeneratedContent = {
@@ -154,6 +184,9 @@ export const generatePowerPrompt = async (brief: string, imageParts: Part[], con
                 break;
             case 'floorplan':
                 writerAgentPrompt = FLOORPLAN_WRITER_AGENT_PROMPT;
+                break;
+            case 'relatedScene':
+                writerAgentPrompt = RELATED_SCENE_WRITER_AGENT_PROMPT;
                 break;
             default:
                 writerAgentPrompt = WRITER_AGENT_PROMPT;

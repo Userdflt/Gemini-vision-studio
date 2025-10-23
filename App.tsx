@@ -189,6 +189,7 @@ const App: React.FC = () => {
       if (relatedImageBase) {
         briefWithContext += "\n\n[Instruction] Generate a new scene that is a logical extension or different perspective of the provided image, guided by the user's brief. The new scene must match the original's style and theme.";
         allImageFilesForPrompt.push(relatedImageBase);
+        agentContext = 'relatedScene';
       }
       if (referenceImages.length > 0) {
         briefWithContext += "\n\n[Instruction] Use the following images as visual cues for style and content. These cues must be described in words in the final prompt, as they are not sent to the image model directly.";

@@ -12,4 +12,4 @@ export interface GeneratedContent {
   questions: string[];
 }
 
-export type AgentContext = 'default' | 'inpainting' | 'floorplan';
+export type AgentContext = 'default' | 'inpainting' | 'floorplan' | 'relatedScene';
