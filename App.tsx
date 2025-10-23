@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Part } from '@google/genai';
-import { GenerationMode, GeneratedContent } from './types';
+import { GenerationMode, GeneratedContent, AgentContext } from './types';
 import { generatePowerPrompt, generateImages } from './services/geminiService';
 import PromptInput from './components/PromptInput';
 import ResultsDisplay from './components/ResultsDisplay';
@@ -171,6 +171,7 @@ const App: React.FC = () => {
     try {
       let briefWithContext = brief;
       const allImageFilesForPrompt: File[] = [];
+      let agentContext: AgentContext = 'default';
 
       if (backgroundImage) {
         briefWithContext += "\n\n[Instruction] Use the following image as the background for the generation.";
@@ -183,6 +184,7 @@ const App: React.FC = () => {
       if (floorplanImage) {
         briefWithContext += "\n\n[Instruction] Use the following floor plan image as the structural base for an image-to-image generation. Visualize it based on the brief.";
         allImageFilesForPrompt.push(floorplanImage);
+        agentContext = 'floorplan';
       }
       if (relatedImageBase) {
         briefWithContext += "\n\n[Instruction] Generate a new scene that is a logical extension or different perspective of the provided image, guided by the user's brief. The new scene must match the original's style and theme.";
@@ -219,6 +221,7 @@ const App: React.FC = () => {
         // Agent-based generation
         if (editImage) {
             briefWithContext = editBrief; // Use edit brief for agent
+            agentContext = 'inpainting';
             const editImagePart = await fileToGenerativePart(editImage);
             imageParts.push(editImagePart);
             if (maskImage) {
@@ -232,7 +235,7 @@ const App: React.FC = () => {
             }
         }
 
-        const content = await generatePowerPrompt(briefWithContext, imageParts);
+        const content = await generatePowerPrompt(briefWithContext, imageParts, agentContext);
         setGeneratedContent(content);
 
         if (generationMode === GenerationMode.PromptAndImage) {

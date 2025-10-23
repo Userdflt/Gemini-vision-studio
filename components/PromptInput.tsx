@@ -102,7 +102,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
         id="brief-input"
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
-        placeholder="e.g., A photorealistic image of a cat astronaut exploring Mars. This brief provides general context."
+        placeholder="e.g., Cinematic, photorealistic shot of a majestic lion with a golden mane, standing on a rocky cliff overlooking a misty valley at sunrise. Dramatic lighting, sharp focus on the lion. AR: 16:9"
         className="w-full h-32 p-3 bg-brand-bg border border-white/20 rounded-lg focus:ring-2 focus:ring-banana-yellow focus:border-banana-yellow transition-colors placeholder:text-brand-subtle"
         disabled={isLoading}
       />

@@ -11,3 +11,5 @@ export interface GeneratedContent {
   assumptions: string[];
   questions: string[];
 }
+
+export type AgentContext = 'default' | 'inpainting' | 'floorplan';

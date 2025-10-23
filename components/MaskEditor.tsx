@@ -9,7 +9,10 @@ interface MaskEditorProps {
   isLoading: boolean;
 }
 
+type DrawMode = 'brush' | 'eraser';
+
 const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBrief, onImageRemove, onMaskUpdate, isLoading }) => {
+  const [drawMode, setDrawMode] = useState<DrawMode>('brush');
   const [brushSize, setBrushSize] = useState(40);
   const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isCursorOverCanvas, setIsCursorOverCanvas] = useState(false);
@@ -74,8 +77,14 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.lineWidth = brushSize;
-    ctx.strokeStyle = 'white'; // Draw in white for easy conversion
-    ctx.globalCompositeOperation = 'source-over';
+
+    if (drawMode === 'brush') {
+      ctx.strokeStyle = 'white';
+      ctx.globalCompositeOperation = 'source-over';
+    } else { // Eraser mode
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    }
 
     if (lastPoint.current) {
         ctx.beginPath();
@@ -84,7 +93,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
         ctx.stroke();
     }
     lastPoint.current = currentPoint;
-  }, [brushSize]);
+  }, [brushSize, drawMode]);
 
   const startDrawing = useCallback((e: MouseEvent | TouchEvent) => {
     e.preventDefault(); // Prevents page scrolling on touch devices
@@ -188,7 +197,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
             id="edit-brief-input"
             value={editBrief}
             onChange={(e) => setEditBrief(e.target.value)}
-            placeholder="Describe what you want to change in the selected area. e.g., 'add a modern, curved glass roof'."
+            placeholder="e.g., 'replace the selected facade with weathered red bricks' or 'add a large oak tree in the selected grassy field'. Please use keywords like 'Selected' for improved results."
             className="w-full h-20 p-3 bg-brand-surface border border-white/20 rounded-lg focus:ring-2 focus:ring-banana-yellow focus:border-banana-yellow transition-colors placeholder:text-brand-subtle"
             disabled={isLoading}
         />
@@ -221,8 +230,37 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
       </div>
 
       <div className="mt-auto pt-2">
+        <div className="flex items-center justify-center gap-4 mb-3">
+            <div className="flex items-center gap-2 p-1 bg-brand-surface rounded-lg">
+                <button
+                    onClick={() => setDrawMode('brush')}
+                    disabled={isLoading}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 ${
+                        drawMode === 'brush'
+                        ? 'bg-banana-yellow text-black font-semibold'
+                        : 'bg-transparent text-brand-subtle hover:bg-white/10'
+                    }`}
+                    aria-pressed={drawMode === 'brush'}
+                >
+                    Brush
+                </button>
+                <button
+                    onClick={() => setDrawMode('eraser')}
+                    disabled={isLoading}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 ${
+                        drawMode === 'eraser'
+                        ? 'bg-banana-yellow text-black font-semibold'
+                        : 'bg-transparent text-brand-subtle hover:bg-white/10'
+                    }`}
+                    aria-pressed={drawMode === 'eraser'}
+                >
+                    Eraser
+                </button>
+            </div>
+        </div>
+
         <div className="flex items-center gap-3 mb-3">
-          <label htmlFor="brush-size" className="text-sm text-brand-subtle whitespace-nowrap">Brush Size</label>
+          <label htmlFor="brush-size" className="text-sm text-brand-subtle whitespace-nowrap capitalize">{drawMode} Size</label>
           <input
             id="brush-size"
             type="range"
