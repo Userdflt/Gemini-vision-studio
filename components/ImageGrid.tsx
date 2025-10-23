@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface ImageGridProps {
@@ -15,7 +16,19 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick }) => {
     const mimeType = src.match(/data:([^;]+);/)?.[1] ?? 'image/png';
     const extension = mimeType.split('/')[1] ?? 'png';
     
-    link.download = `vision-studio-image-${index + 1}.${extension}`;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+
+    let hours = now.getHours();
+    hours = hours % 12;
+    hours = hours ? hours : 12; // Convert 0 to 12 for 12-hour format
+    const hours12 = String(hours).padStart(2, '0');
+
+    const fileName = `${year}-${month}-${day}_${hours12}-${minutes}`;
+    link.download = `${fileName}.${extension}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
