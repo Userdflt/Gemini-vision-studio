@@ -2,45 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import type { Part } from '@google/genai';
 import { GenerationMode, GeneratedContent, AgentContext } from './types';
 import { generatePowerPrompt, generateImages } from './services/geminiService';
+import { saveSession, loadSession } from './services/dbService';
 import PromptInput from './components/PromptInput';
 import ResultsDisplay from './components/ResultsDisplay';
 import Loader from './components/Loader';
-
-// --- Session Persistence Helpers ---
-
-const SESSION_KEY = 'geminiNanoBananaSession';
-
-// Helper to convert a File to a savable Data URL string
-const fileToDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            if (typeof reader.result === 'string') {
-                resolve(reader.result);
-            } else {
-                reject(new Error("Failed to read file as data URL"));
-            }
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-    });
-};
-
-// Helper to convert a Data URL string back to a File object
-const dataURLtoFile = (dataurl: string, filename: string): File => {
-    const arr = dataurl.split(',');
-    const mimeMatch = arr[0].match(/:(.*?);/);
-    if (!mimeMatch) throw new Error('Invalid data URL');
-    const mime = mimeMatch[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-};
-
 
 const fileToGenerativePart = async (file: File): Promise<Part> => {
     const base64EncodedDataPromise = new Promise<string>((resolve, reject) => {
@@ -82,66 +47,66 @@ const App: React.FC = () => {
   const [generatedImages, setGeneratedImages] = useState<string[] | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load session from localStorage on initial mount
+  // Load session from IndexedDB on initial mount
   useEffect(() => {
-    try {
-        const savedSession = localStorage.getItem(SESSION_KEY);
+    const restoreSession = async () => {
+      try {
+        const savedSession = await loadSession();
         if (savedSession) {
-            const parsed = JSON.parse(savedSession);
-            setBrief(parsed.brief ?? '');
-            setEditBrief(parsed.editBrief ?? '');
-            setGenerationMode(parsed.generationMode ?? GenerationMode.PromptAndImage);
-            setImageCount(parsed.imageCount ?? 4);
+          setBrief(savedSession.brief ?? '');
+          setEditBrief(savedSession.editBrief ?? '');
+          setGenerationMode(savedSession.generationMode ?? GenerationMode.PromptAndImage);
+          setImageCount(savedSession.imageCount ?? 4);
 
-            // Restore images
-            if (parsed.referenceImages) setReferenceImages(parsed.referenceImages.map((f: any) => dataURLtoFile(f.data, f.name)));
-            if (parsed.backgroundImage) setBackgroundImage(dataURLtoFile(parsed.backgroundImage.data, parsed.backgroundImage.name));
-            if (parsed.editImage) setEditImage(dataURLtoFile(parsed.editImage.data, parsed.editImage.name));
-            if (parsed.sketchImage) setSketchImage(dataURLtoFile(parsed.sketchImage.data, parsed.sketchImage.name));
-            if (parsed.floorplanImage) setFloorplanImage(dataURLtoFile(parsed.floorplanImage.data, parsed.floorplanImage.name));
-            if (parsed.relatedImageBase) setRelatedImageBase(dataURLtoFile(parsed.relatedImageBase.data, parsed.relatedImageBase.name));
+          // Files are restored directly from IndexedDB
+          setReferenceImages(savedSession.referenceImages ?? []);
+          setBackgroundImage(savedSession.backgroundImage ?? null);
+          setEditImage(savedSession.editImage ?? null);
+          setSketchImage(savedSession.sketchImage ?? null);
+          setFloorplanImage(savedSession.floorplanImage ?? null);
+          setRelatedImageBase(savedSession.relatedImageBase ?? null);
         }
-    } catch (e) {
-        console.error("Failed to load session:", e);
-        localStorage.removeItem(SESSION_KEY);
-    } finally {
+      } catch (e) {
+        console.error("Failed to load session from IndexedDB:", e);
+      } finally {
         setIsInitialized(true);
-    }
+      }
+    };
+    restoreSession();
   }, []);
 
-  // Save session to localStorage whenever inputs change
+  // Save session to IndexedDB whenever inputs change
   useEffect(() => {
     if (!isInitialized) return; // Don't save until after initial load
 
-    const saveSession = async () => {
-        try {
-            const sessionData = {
-                brief,
-                editBrief,
-                generationMode,
-                imageCount,
-                referenceImages: await Promise.all(referenceImages.map(async f => ({ name: f.name, data: await fileToDataURL(f) }))),
-                backgroundImage: backgroundImage ? { name: backgroundImage.name, data: await fileToDataURL(backgroundImage) } : null,
-                editImage: editImage ? { name: editImage.name, data: await fileToDataURL(editImage) } : null,
-                sketchImage: sketchImage ? { name: sketchImage.name, data: await fileToDataURL(sketchImage) } : null,
-                floorplanImage: floorplanImage ? { name: floorplanImage.name, data: await fileToDataURL(floorplanImage) } : null,
-                relatedImageBase: relatedImageBase ? { name: relatedImageBase.name, data: await fileToDataURL(relatedImageBase) } : null,
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-        } catch (e) {
-            console.error("Failed to save session:", e);
-        }
+    const persistSession = async () => {
+      try {
+        const sessionData = {
+          brief,
+          editBrief,
+          generationMode,
+          imageCount,
+          referenceImages,
+          backgroundImage,
+          editImage,
+          sketchImage,
+          floorplanImage,
+          relatedImageBase,
+        };
+        await saveSession(sessionData);
+      } catch (e) {
+        console.error("Failed to save session to IndexedDB:", e);
+      }
     };
     
     // Debounce saving to avoid excessive writes for rapid changes (like sliders)
     const handler = setTimeout(() => {
-        saveSession();
+        persistSession();
     }, 500);
 
     return () => {
-        clearTimeout(handler);
+      clearTimeout(handler);
     };
-
   }, [brief, editBrief, generationMode, imageCount, referenceImages, backgroundImage, editImage, sketchImage, floorplanImage, relatedImageBase, isInitialized]);
 
 
