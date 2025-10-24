@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality, Part } from "@google/genai";
 import type { GeneratedContent, AgentContext } from '../types';
 
@@ -223,7 +224,8 @@ export const generatePowerPrompt = async (brief: string, imageParts: Part[], con
 
 export const generateImages = async (prompt: string, count: number, imageParts: Part[]): Promise<string[]> => {
     const promptPart = { text: prompt };
-    const requestParts = [promptPart, ...imageParts];
+    // For inpainting and image-to-image, the image parts must come before the text prompt.
+    const requestParts = [...imageParts, promptPart];
 
     const imagePromises = Array.from({ length: count }, () => 
         ai.models.generateContent({
