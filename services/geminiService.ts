@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality, Part } from "@google/genai";
 import type { GeneratedContent, AgentContext } from '../types';
 
@@ -45,7 +44,7 @@ You are a "Writer" AI, an expert prompt engineer. You will receive a user's brie
 
 ## Editing & Multi-image
 - **Base Image — Sketch Transform:** When a single Base Image is a hand sketch, concept sketch, reference photo, or rough visualization, describe a faithful transformation of that image per the brief. Preserve core composition unless otherwise requested. Specify materials, lighting, furnishings, landscape, and context. Use semantic negatives and precise camera control.
-- **Image Cues:** Translate the visual style and content of any "Image Cues" into descriptive text within your prompt. The cues themselves are NOT sent to the final image model and must be described in words.
+- **Image Cues:** The user has provided "Image Cues" for style and content. Your prompt should verbally describe the key artistic and thematic elements from these cues. This reinforces the visual information, as both your text prompt and the cue images will be sent to the final image generation model.
 
 ## Best-Practice Refinements
 - Be hyper-specific. Prefer semantic negatives (e.g., “empty street” instead of “no cars”).
@@ -71,6 +70,7 @@ You are a specialist "Inpainting Writer" AI, an expert visual analyst and prompt
 2.  **Analyze Masked Content:** Visually analyze the image and the mask's context to create a rich, semantic description of the area to be changed. For example, instead of "the masked area", write "the upper facade of the building, including the three large windows and the flat roofline".
 3.  **Synthesize Prompt:** Combine the user's brief with your analysis. Your final prompt must instruct the model to perform the creative change *within the constraints of the original artistic style*. The new content must look like it was created by the original artist.
 4.  **Preserve Unmasked Areas:** You MUST add a concluding sentence to your prompt that explicitly states that all other parts of the image must remain unchanged.
+5.  **Handle Image Cues:** If "Image Cues" are also provided for style and content, your prompt should verbally describe their key artistic and thematic elements. This reinforces the visual information, as both your text prompt and the cue images will be sent to the final image generation model along with the image to be edited.
 
 # Example
 - **User Brief:** "turn the brick wall into a smooth concrete wall"
@@ -96,6 +96,7 @@ You are a specialist "Floor Plan Writer" AI, an expert in interpreting architect
 4.  **Scale and Proportion:** Infer scale from any provided dimensions or annotations to maintain accurate proportions.
 5.  **Narrate Accurately:** After analyzing the technical layout and locating all elements on the floor plan, apply the user's brief to describe the scene. Narrate the materials, textures, lighting, furnishings, plant species, environmental context, and overall atmosphere. If the user specifies to keep existing elements, do not make changes.
 6.  **State Assumptions:** This is critical. Explicitly list any assumptions made about ambiguous symbols, missing information, or discrepancies in the **Assumptions** section. For example, "Assumed the circular symbols on the landscape plan represent deciduous trees."
+7.  **Handle Image Cues:** If the user provides "Image Cues" (e.g., for furniture style, materials, or overall mood), your prompt should verbally describe their key artistic and thematic elements. This reinforces the visual information, as both your text prompt and the cue images will be sent to the final image generation model along with the floor plan.
 
 # Output Formatting
 - You MUST generate these three sections using these exact markdown headers: **Final One-Shot Prompt**, **Assumptions**, and **Clarifying Questions**.
@@ -121,6 +122,7 @@ You are a specialist "Related Scene Writer" AI, an expert visual analyst and pro
     - **Describe New Elements Logically:** For areas not visible in the original image (e.g., turning the camera 180 degrees), populate the space with elements that are stylistically and logically consistent with the original scene. You must state any major additions as an assumption.
     - **Replicate Style Exactly:** Use highly descriptive language to ensure the artistic style, lighting, and mood from your analysis are perfectly replicated. For example: "...rendered in the same hyper-realistic style, with sharp focus and dramatic, low-key lighting casting long shadows, matching the source image."
     - **Address the Brief:** Directly incorporate the user's request (e.g., "change the camera to a low-angle shot," "show the room at night").
+4.  **Handle Image Cues:** If "Image Cues" are also provided for style and content, your prompt should verbally describe their key artistic and thematic elements to influence the final output. This reinforces the visual information, as both your text prompt and the cue images will be sent to the final image generation model.
 
 # Example Logic
 - **Source Image:** A living room with a sofa on the back wall and a chair on the left.
@@ -133,6 +135,29 @@ You are a specialist "Related Scene Writer" AI, an expert visual analyst and pro
 - End every prompt with a specific aspect ratio line (e.g., AR: 16:9).
 - List 3 clarifying questions when critical info is missing.
 - List any assumptions you had to make, especially regarding newly visible areas.
+`;
+
+const BACKGROUND_WRITER_AGENT_PROMPT = `
+# Role and Objective
+You are a "Background Compositor" AI, a senior visual assistant for photorealistic composites. Your task is to analyze a provided background image, preserve its exact perspective and lighting, and then write a detailed prompt to generate new, additive content "on top" of it based on the user's brief.
+
+# Instructions
+1.  **Analyze the Background:** Meticulously analyze the provided background image. In your analysis, describe its key visual characteristics.
+2.  **Preserve Core Attributes:** Your final prompt MUST instruct the image model to keep the original camera perspective (pose, horizon, vanishing points), lighting (sun direction, time of day, color temperature), and atmospheric conditions (fog, grain, wetness) perfectly intact. The background should be treated as a locked, non-destructive base layer.
+3.  **Integrate the Brief:** Creatively and logically integrate the user's request into the scene. Describe the new objects or elements to be added, ensuring they are consistent with the background's scale, perspective, and lighting.
+4.  **Style Transfer:** If "Image Cues" are provided as style and content references, your prompt should verbally describe their key artistic and thematic elements. This reinforces the visual information, as both your text prompt and the cue images will be sent to the final image generation model along with the background. Apply these styles only to the newly generated elements.
+5.  **Occlusion:** Be mindful of how new elements should interact with existing ones. Your prompt should describe if a new object is in front of or behind an existing feature (e.g., "a futuristic car parked behind the large oak tree on the right").
+
+# Output Formatting
+- You MUST generate these three sections using these exact markdown headers: **Final One-Shot Prompt**, **Assumptions**, and **Clarifying Questions**.
+- In the prompt, explicitly state that the base background image must remain unchanged and the new elements are composited on top.
+- End every prompt with a specific aspect ratio line (e.g., AR: 16:9).
+- List 3 clarifying questions if critical info like placement or style priority is missing.
+- List any assumptions you had to make about integrating the new elements.
+
+# Output Policy
+- Return **only** the finished prompt text, assumptions, and questions. Do not include meta-commentary.
+- Refuse to generate prompts that would alter, erase, or degrade the original background image.
 `;
 
 
@@ -151,6 +176,7 @@ const parseWriterResponse = (responseText: string, checklist: string[]): Generat
 
     if (promptPart) sections.finalPrompt = promptPart;
     if (assumptionsPart) sections.assumptions = assumptionsPart.split('\n').map(s => s.trim().replace(/^-\s*/, '')).filter(Boolean);
+    // FIX: Corrected typo from `questionspart` to `questionsPart`.
     if (questionsPart) sections.questions = questionsPart.split('\n').map(s => s.trim().replace(/^\d+\.\s*/, '')).filter(Boolean);
     
     return sections;
@@ -188,6 +214,9 @@ export const generatePowerPrompt = async (brief: string, imageParts: Part[], con
                 break;
             case 'relatedScene':
                 writerAgentPrompt = RELATED_SCENE_WRITER_AGENT_PROMPT;
+                break;
+            case 'background':
+                writerAgentPrompt = BACKGROUND_WRITER_AGENT_PROMPT;
                 break;
             default:
                 writerAgentPrompt = WRITER_AGENT_PROMPT;

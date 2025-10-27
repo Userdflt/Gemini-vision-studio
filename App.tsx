@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import type { Part } from '@google/genai';
 import { GenerationMode, GeneratedContent, AgentContext } from './types';
@@ -141,6 +142,7 @@ const App: React.FC = () => {
       if (backgroundImage) {
         briefWithContext += "\n\n[Instruction] Use the following image as the background for the generation.";
         allImageFilesForPrompt.push(backgroundImage);
+        agentContext = 'background';
       }
       if (sketchImage) {
         briefWithContext += "\n\n[Instruction] Use the following image as the structural base for an image-to-image generation. Transform it based on the brief.";
@@ -157,7 +159,7 @@ const App: React.FC = () => {
         agentContext = 'relatedScene';
       }
       if (referenceImages.length > 0) {
-        briefWithContext += "\n\n[Instruction] Use the following images as visual cues for style and content. These cues must be described in words in the final prompt, as they are not sent to the image model directly.";
+        briefWithContext += "\n\n[Instruction] Use the following images as visual cues for style and content. Describe their key features in the final prompt to reinforce their influence, as both the prompt and the images will be sent to the final image model.";
         allImageFilesForPrompt.push(...referenceImages);
       }
       
@@ -211,8 +213,8 @@ const App: React.FC = () => {
                 generationImageParts.push(await fileToGenerativePart(editImage));
                 if(maskImage) generationImageParts.push(await fileToGenerativePart(maskImage));
             } else {
-                // For non-edit modes, only background/base/related images are sent to the final model
-                const finalImageInputs = [backgroundImage, sketchImage, floorplanImage, relatedImageBase].filter((f): f is File => f !== null);
+                // For non-edit modes, all base and reference images are sent to the final model
+                const finalImageInputs = [backgroundImage, sketchImage, floorplanImage, relatedImageBase, ...referenceImages].filter((f): f is File => f !== null);
                 for (const file of finalImageInputs) {
                     generationImageParts.push(await fileToGenerativePart(file));
                 }
