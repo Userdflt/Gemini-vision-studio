@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ImageGridProps {
@@ -39,7 +38,7 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick }) => {
       {images.map((src, index) => (
         <div 
           key={index} 
-          className="relative group aspect-square bg-brand-bg rounded-lg overflow-hidden border border-white/10 cursor-pointer"
+          className="relative group aspect-square bg-muted rounded-lg overflow-hidden border border-border cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-ring hover:ring-offset-2 hover:ring-offset-background"
           onClick={() => onImageClick(src)}
           role="button"
           tabIndex={0}
@@ -49,11 +48,11 @@ const ImageGrid: React.FC<ImageGridProps> = ({ images, onImageClick }) => {
           <img
             src={src}
             alt={`Generated image ${index + 1}`}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 ease-custom-ease group-hover:scale-105"
           />
           <button
             onClick={(e) => handleDownload(e, src, index)}
-            className="absolute bottom-2 right-2 bg-black/60 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-black/80"
+            className="absolute bottom-2 right-2 bg-background/70 text-foreground rounded-md p-1.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 hover:bg-background/90 backdrop-blur-sm border border-border"
             aria-label={`Download image ${index + 1}`}
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -186,11 +186,11 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
 
   return (
     <div className="flex flex-col h-full">
-      <h4 className="font-semibold text-brand-text">Image to Edit & Mask</h4>
-      <p className="text-sm text-brand-subtle mb-4">Provide a specific brief and then draw on the image to select the area you want to change.</p>
+      <h4 className="font-semibold text-foreground">Image to Edit & Mask</h4>
+      <p className="text-sm text-muted-foreground mb-4">Provide a specific brief and then draw on the image to select the area you want to change.</p>
       
       <div className="mb-4">
-        <label htmlFor="edit-brief-input" className="block text-md font-semibold mb-2 text-banana-yellow">
+        <label htmlFor="edit-brief-input" className="block text-sm font-semibold mb-2 text-foreground">
             Brief for Masked Area
         </label>
         <textarea
@@ -198,7 +198,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
             value={editBrief}
             onChange={(e) => setEditBrief(e.target.value)}
             placeholder="e.g., 'replace the selected facade with weathered red bricks' or 'add a large oak tree in the selected grassy field'. Please use keywords like 'Selected' for improved results."
-            className="w-full h-20 p-3 bg-brand-surface border border-white/20 rounded-lg focus:ring-2 focus:ring-banana-yellow focus:border-banana-yellow transition-colors placeholder:text-brand-subtle"
+            className="w-full h-20 p-3 bg-muted border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors placeholder:text-muted-foreground"
             disabled={isLoading}
         />
       </div>
@@ -207,7 +207,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
         <canvas ref={imageCanvasRef} className="absolute top-0 left-0 w-full h-auto rounded-md" />
         <canvas 
           ref={drawingCanvasRef} 
-          className="relative top-0 left-0 w-full h-auto opacity-50 bg-red-500/50 rounded-md cursor-crosshair"
+          className="relative top-0 left-0 w-full h-auto opacity-50 bg-red-500/50 rounded-md cursor-none"
           onMouseEnter={() => setIsCursorOverCanvas(true)}
           onMouseLeave={() => setIsCursorOverCanvas(false)}
           onMouseMove={(e) => {
@@ -217,7 +217,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
         />
         {isCursorOverCanvas && !isLoading && (
             <div
-                className="absolute rounded-full border-2 border-white bg-white/20 pointer-events-none -translate-x-1/2 -translate-y-1/2"
+                className="absolute rounded-full border border-white/80 bg-white/30 pointer-events-none -translate-x-1/2 -translate-y-1/2"
                 style={{
                     left: cursorPosition.x,
                     top: cursorPosition.y,
@@ -231,14 +231,14 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
 
       <div className="mt-auto pt-2">
         <div className="flex items-center justify-center gap-4 mb-3">
-            <div className="flex items-center gap-2 p-1 bg-brand-surface rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
                 <button
                     onClick={() => setDrawMode('brush')}
                     disabled={isLoading}
                     className={`px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 ${
                         drawMode === 'brush'
-                        ? 'bg-banana-yellow text-black font-semibold'
-                        : 'bg-transparent text-brand-subtle hover:bg-white/10'
+                        ? 'bg-background text-foreground font-semibold shadow-sm border border-border'
+                        : 'bg-transparent text-muted-foreground hover:bg-background/50'
                     }`}
                     aria-pressed={drawMode === 'brush'}
                 >
@@ -249,8 +249,8 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
                     disabled={isLoading}
                     className={`px-3 py-1 text-sm rounded-md transition-colors disabled:opacity-50 ${
                         drawMode === 'eraser'
-                        ? 'bg-banana-yellow text-black font-semibold'
-                        : 'bg-transparent text-brand-subtle hover:bg-white/10'
+                        ? 'bg-background text-foreground font-semibold shadow-sm border border-border'
+                        : 'bg-transparent text-muted-foreground hover:bg-background/50'
                     }`}
                     aria-pressed={drawMode === 'eraser'}
                 >
@@ -260,7 +260,7 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
         </div>
 
         <div className="flex items-center gap-3 mb-3">
-          <label htmlFor="brush-size" className="text-sm text-brand-subtle whitespace-nowrap capitalize">{drawMode} Size</label>
+          <label htmlFor="brush-size" className="text-sm text-muted-foreground whitespace-nowrap capitalize">{drawMode} Size</label>
           <input
             id="brush-size"
             type="range"
@@ -269,22 +269,22 @@ const MaskEditor: React.FC<MaskEditorProps> = ({ imageFile, editBrief, setEditBr
             value={brushSize}
             onChange={(e) => setBrushSize(Number(e.target.value))}
             disabled={isLoading}
-            className="w-full h-2 bg-brand-surface rounded-lg appearance-none cursor-pointer accent-banana-yellow"
+            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
           />
-          <span className="font-semibold text-brand-text w-8 text-center">{brushSize}</span>
+          <span className="font-semibold text-foreground w-8 text-center">{brushSize}</span>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <button 
             onClick={clearMask} 
             disabled={isLoading}
-            className="w-full text-sm py-1.5 px-3 rounded-md bg-brand-surface hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="w-full text-sm font-medium py-1.5 px-3 rounded-md bg-secondary text-secondary-foreground hover:bg-muted transition-colors disabled:opacity-50"
           >
             Clear Mask
           </button>
           <button 
             onClick={onImageRemove}
             disabled={isLoading}
-            className="w-full text-sm py-1.5 px-3 rounded-md bg-red-900/50 hover:bg-red-900/80 transition-colors disabled:opacity-50"
+            className="w-full text-sm font-medium py-1.5 px-3 rounded-md bg-secondary text-destructive hover:bg-muted transition-colors disabled:opacity-50"
           >
             Remove Image
           </button>

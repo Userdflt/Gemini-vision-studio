@@ -39,7 +39,7 @@ const RadioOption: React.FC<{
   description: string;
   disabled: boolean;
 }> = ({ id, value, currentValue, onChange, label, description, disabled }) => (
-  <label htmlFor={id} className={`flex p-3 rounded-lg border border-brand-surface bg-brand-surface/50 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'has-[:checked]:bg-banana-yellow/10 has-[:checked]:border-banana-yellow/50 cursor-pointer'}`}>
+  <label htmlFor={id} className={`flex p-3 rounded-lg border bg-card transition-colors duration-200 ${disabled ? 'opacity-60 cursor-not-allowed' : 'has-[:checked]:border-secondary-foreground has-[:checked]:bg-muted cursor-pointer'}`}>
     <input
       type="radio"
       id={id}
@@ -47,13 +47,13 @@ const RadioOption: React.FC<{
       value={value}
       checked={currentValue === value}
       onChange={onChange}
-      className="shrink-0 mt-0.5 border-gray-200 rounded-full text-banana-yellow focus:ring-banana-yellow disabled:opacity-50 disabled:pointer-events-none bg-brand-bg checked:bg-banana-yellow"
+      className="shrink-0 mt-0.5 border-muted-foreground rounded-full text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
       disabled={disabled}
     />
-    <span className="ms-3">
-      <span className="block text-sm font-semibold text-brand-text">{label}</span>
-      <span className="block text-sm text-brand-subtle">{description}</span>
-    </span>
+    <div className="ms-3">
+      <span className="block text-sm font-semibold text-card-foreground">{label}</span>
+      <span className="block text-sm text-muted-foreground">{description}</span>
+    </div>
   </label>
 );
 
@@ -94,8 +94,8 @@ const PromptInput: React.FC<PromptInputProps> = ({
 
 
   return (
-    <div className="bg-brand-surface rounded-xl p-6 shadow-lg border border-white/10">
-      <label htmlFor="brief-input" className="block text-lg font-semibold mb-2 text-brand-text">
+    <div className="bg-card rounded-lg p-6 border border-border">
+      <label htmlFor="brief-input" className="block text-base font-semibold mb-2 text-foreground">
         1. Enter Your Image Brief
       </label>
       <textarea
@@ -103,17 +103,17 @@ const PromptInput: React.FC<PromptInputProps> = ({
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
         placeholder="e.g., Cinematic, photorealistic shot of a majestic lion with a golden mane, standing on a rocky cliff overlooking a misty valley at sunrise. Dramatic lighting, sharp focus on the lion. AR: 16:9"
-        className="w-full h-32 p-3 bg-brand-bg border border-white/20 rounded-lg focus:ring-2 focus:ring-banana-yellow focus:border-banana-yellow transition-colors placeholder:text-brand-subtle"
+        className="w-full h-32 p-3 bg-background border border-input rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors placeholder:text-muted-foreground"
         disabled={isLoading}
       />
 
       <div className="mt-6">
-        <h3 className="block text-lg font-semibold mb-3 text-brand-text">
-          1.5 (Optional) Provide Images
+        <h3 className="block text-base font-semibold mb-3 text-foreground">
+          2. (Optional) Provide Images
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {editImage ? (
-            <div className="md:col-span-2 bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+            <div className="md:col-span-2 bg-background border border-border rounded-lg p-4 h-full flex flex-col">
               <MaskEditor 
                 imageFile={editImage}
                 editBrief={editBrief}
@@ -129,7 +129,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
             </div>
           ) : (
             <>
-              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <div className="bg-background border border-border rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
                   title="Add a Background"
                   description="Image to use as the background."
@@ -141,7 +141,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
                 />
               </div>
 
-              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <div className="bg-background border border-border rounded-lg p-4 h-full flex flex-col">
                   <ImageUploader
                     title="Image to Edit & Mask"
                     description="Upload an image to edit or inpaint."
@@ -152,7 +152,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
                   />
               </div>
 
-              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <div className="bg-background border border-border rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
                   title="Base Image (Sketch/Photo)"
                   description="Transform a sketch or photo."
@@ -164,10 +164,10 @@ const PromptInput: React.FC<PromptInputProps> = ({
                 />
               </div>
 
-              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <div className="bg-background border border-border rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
-                  title="Base Image (Floor Plan) WIP"
-                  description="Visualize from a floor plan - currently testing"
+                  title="Base Image (Floor Plan)"
+                  description="Visualize from a floor plan."
                   files={floorplanImage ? [floorplanImage] : []}
                   setFiles={(newFiles) => setFloorplanImage(newFiles[0] || null)}
                   maxFiles={1}
@@ -176,7 +176,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
                 />
               </div>
               
-              <div className="bg-brand-bg border border-white/10 rounded-lg p-4 h-full flex flex-col">
+              <div className="bg-background border border-border rounded-lg p-4 h-full flex flex-col">
                 <ImageUploader
                     title="Generate Related Scenes"
                     description="Generate new scenes based on this image."
@@ -190,7 +190,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
             </>
           )}
           
-          <div className="md:col-span-2 bg-brand-bg border border-white/10 rounded-lg p-4">
+          <div className="md:col-span-2 bg-background border border-border rounded-lg p-4">
             <ImageUploader
               title="Image Cues"
               description="Use as style and content references (Max 3)."
@@ -204,7 +204,7 @@ const PromptInput: React.FC<PromptInputProps> = ({
       </div>
 
       <div className="mt-6">
-        <h3 className="block text-lg font-semibold mb-3 text-brand-text">2. Choose Output</h3>
+        <h3 className="block text-base font-semibold mb-3 text-foreground">3. Choose Output</h3>
         <div className="grid sm:grid-cols-3 gap-4">
           <RadioOption 
             id="mode-both"
@@ -238,8 +238,8 @@ const PromptInput: React.FC<PromptInputProps> = ({
 
       <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="w-full md:w-auto flex-grow">
-            <div className="flex items-center gap-3 max-w-sm mx-auto md:mx-0">
-                <label htmlFor="image-count" className="text-sm font-medium text-brand-subtle whitespace-nowrap">Number of Images:</label>
+            <div className="flex items-center gap-3 w-full md:max-w-sm">
+                <label htmlFor="image-count" className="text-sm font-medium text-muted-foreground whitespace-nowrap">Number of Images:</label>
                 <input
                     id="image-count"
                     type="range"
@@ -249,9 +249,9 @@ const PromptInput: React.FC<PromptInputProps> = ({
                     value={imageCount}
                     onChange={(e) => setImageCount(Number(e.target.value))}
                     disabled={isLoading || isImageGenerationDisabled}
-                    className="w-full h-2 bg-brand-bg rounded-lg appearance-none cursor-pointer accent-banana-yellow disabled:opacity-50"
+                    className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <span className="font-semibold text-brand-text w-4 text-center">{imageCount}</span>
+                <span className="font-semibold text-foreground w-4 text-center">{imageCount}</span>
             </div>
         </div>
 
@@ -259,11 +259,11 @@ const PromptInput: React.FC<PromptInputProps> = ({
             <button
                 onClick={onGenerate}
                 disabled={isLoading || (!brief.trim() && !editImage)}
-                className="w-full md:w-auto flex-grow bg-banana-yellow text-black font-bold py-3 px-8 rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full md:w-auto flex-grow bg-primary text-primary-foreground font-semibold py-2 px-6 rounded-md hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center"
             >
                 {isLoading ? (
                     <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>

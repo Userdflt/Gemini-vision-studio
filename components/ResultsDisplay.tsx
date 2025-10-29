@@ -10,17 +10,17 @@ interface ResultsDisplayProps {
   generationMode: GenerationMode;
 }
 
-const ResultSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <div className="mb-6">
-    <h3 className="text-xl font-semibold text-banana-yellow mb-2 tracking-wide">{title}</h3>
+const ResultSection: React.FC<{ title: string; children: React.ReactNode; className?: string }> = ({ title, children, className = '' }) => (
+  <div className={`py-6 border-b border-border last:border-b-0 ${className}`}>
+    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">{title}</h3>
     {children}
   </div>
 );
 
 const BulletList: React.FC<{ items: string[] }> = ({ items }) => (
-  <ul className="list-disc list-inside space-y-1 text-brand-subtle">
+  <ul className="list-disc list-inside space-y-1.5 text-secondary-foreground">
     {items.map((item, index) => (
-      <li key={index}>{item}</li>
+      <li key={index} className="text-foreground">{item}</li>
     ))}
   </ul>
 );
@@ -30,27 +30,27 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ content, images, genera
 
   return (
     <>
-      <div className="mt-10 animate-fade-in">
+      <div className="mt-12">
         {generationMode !== GenerationMode.ImageOnly && content && (
-          <div className="bg-brand-surface rounded-xl p-6 shadow-lg border border-white/10 mb-8">
-            <ResultSection title="Checklist">
+          <div className="bg-card border border-border rounded-lg">
+            <ResultSection title="Checklist" className="px-6">
               <BulletList items={content.checklist} />
             </ResultSection>
 
-            <ResultSection title="Final One-Shot Prompt">
-              <pre className="bg-brand-bg p-4 rounded-lg text-brand-text whitespace-pre-wrap font-mono text-sm border border-white/10">
+            <ResultSection title="Final One-Shot Prompt" className="px-6">
+              <pre className="bg-muted p-4 rounded-md text-foreground whitespace-pre-wrap font-mono text-sm">
                 <code>{content.finalPrompt}</code>
               </pre>
             </ResultSection>
 
-            <ResultSection title="Assumptions">
+            <ResultSection title="Assumptions" className="px-6">
               <BulletList items={content.assumptions} />
             </ResultSection>
 
-            <ResultSection title="Clarifying Questions">
-              <ol className="list-decimal list-inside space-y-1 text-brand-subtle">
+            <ResultSection title="Clarifying Questions" className="px-6">
+              <ol className="list-decimal list-inside space-y-1.5 text-secondary-foreground">
                 {content.questions.map((item, index) => (
-                  <li key={index}>{item}</li>
+                  <li key={index} className="text-foreground">{item}</li>
                 ))}
               </ol>
             </ResultSection>
@@ -58,8 +58,8 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ content, images, genera
         )}
 
         {generationMode !== GenerationMode.PromptOnly && images && images.length > 0 && (
-          <div className="bg-brand-surface rounded-xl p-6 shadow-lg border border-white/10">
-            <h3 className="text-2xl font-bold text-center text-banana-yellow mb-4 tracking-wide">Generated Images</h3>
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Generated Images</h3>
             <ImageGrid images={images} onImageClick={setSelectedImage} />
           </div>
         )}

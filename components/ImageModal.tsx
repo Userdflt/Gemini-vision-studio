@@ -21,7 +21,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ imageUrl, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -38,7 +38,7 @@ const ImageModal: React.FC<ImageModalProps> = ({ imageUrl, onClose }) => {
         />
         <button
           onClick={onClose}
-          className="absolute -top-3 -right-3 bg-brand-surface text-white rounded-full p-1.5 hover:bg-white/20 transition-opacity focus:outline-none focus:ring-2 focus:ring-banana-yellow"
+          className="absolute -top-3 -right-3 bg-card text-foreground rounded-full p-1.5 hover:bg-muted transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring border border-border"
           aria-label="Close enlarged image view"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

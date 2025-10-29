@@ -1,47 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gemini Vision Studio</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'banana-yellow': '#FFE135',
-              'brand-bg': '#131314',
-              'brand-surface': '#1e1f20',
-              'brand-text': '#e3e3e3',
-              'brand-subtle': '#8c8c8c',
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        :root {
+          --background: 222 47% 15%;
+          --foreground: 220 14% 96%;
+          --card: 221 39% 18%;
+          --card-foreground: 220 14% 96%;
+          --primary: 220 14% 96%;
+          --primary-foreground: 222 47% 11%;
+          --secondary: 222 31% 24%;
+          --secondary-foreground: 220 16% 67%;
+          --muted: 222 31% 24%;
+          --muted-foreground: 220 16% 67%;
+          --accent: 220 14% 96%;
+          --accent-foreground: 222 47% 11%;
+          --destructive: 0 63% 51%;
+          --destructive-foreground: 0 0% 100%;
+          --border: 220 24% 27%;
+          --input: 220 24% 27%;
+          --ring: 220 14% 96%;
+          --radius: 0.5rem;
+        }
+        body {
+          background-color: hsl(var(--background));
+          background-image: radial-gradient(ellipse 90% 50% at 50% -20%, hsla(221, 39%, 18%, 0.4), transparent);
+          background-repeat: no-repeat;
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @keyframes marquee-reverse {
+          from { transform: translateX(-50%); }
+          to { transform: translateX(0); }
+        }
+        @keyframes fade-loop {
+          0% { opacity: 0; }
+          2% { opacity: 1; }
+          98% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      </style>
+      <script>
+        tailwind.config = {
+          darkMode:'class',
+          theme:{extend:{
+            fontFamily:{ sans:['Inter','ui-sans-serif','system-ui']},
+            colors:{
+              border:'hsl(var(--border) / <alpha-value>)',
+              input:'hsl(var(--input) / <alpha-value>)',
+              ring:'hsl(var(--ring) / <alpha-value>)',
+              background:'hsl(var(--background) / <alpha-value>)',
+              foreground:'hsl(var(--foreground) / <alpha-value>)',
+              primary:{DEFAULT:'hsl(var(--primary))', foreground:'hsl(var(--primary-foreground))'},
+              secondary:{DEFAULT:'hsl(var(--secondary))', foreground:'hsl(var(--secondary-foreground))'},
+              muted:{DEFAULT:'hsl(var(--muted))', foreground:'hsl(var(--muted-foreground))'},
+              accent:{DEFAULT:'hsl(var(--accent))', foreground:'hsl(var(--accent-foreground))'},
+              destructive:{DEFAULT:'hsl(var(--destructive))', foreground:'hsl(var(--destructive-foreground))'},
+              card:{DEFAULT:'hsl(var(--card))', foreground:'hsl(var(--card-foreground))'},
             },
-            animation: {
-              'fade-in': 'fadeIn 0.3s ease-out forwards',
+            borderRadius:{ lg:'var(--radius)', md:'calc(var(--radius) - 2px)', sm:'calc(var(--radius) - 4px)'},
+            transitionTimingFunction: {
+              'custom-ease': 'cubic-bezier(0.22, 1, 0.36, 1)',
             },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-            }
-          },
-        },
-      }
-    </script>
-  <script type="importmap">
+          }}
+        }
+      </script>
+    <script type="importmap">
 {
   "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0"
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
   }
 }
 </script>
 </head>
-  <body class="bg-brand-bg text-brand-text">
+    <body class="text-foreground antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

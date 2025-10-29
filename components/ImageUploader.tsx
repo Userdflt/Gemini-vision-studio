@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { SUPPORTED_MIME_TYPES } from '../types';
 
 interface ImageUploaderProps {
   title: string;
@@ -20,7 +21,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files
 
   const processFiles = (selectedFiles: File[]) => {
     if (!canUpload) return;
-    const imageFiles = selectedFiles.filter(file => file.type.startsWith('image/'));
+    const imageFiles = selectedFiles.filter(file => SUPPORTED_MIME_TYPES.includes(file.type));
     if(imageFiles.length === 0) return;
 
     const combined = [...files, ...imageFiles].slice(0, maxFiles);
@@ -83,9 +84,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files
   const uploaderContent = (
     <div 
       className={`flex-grow flex flex-col items-center justify-center w-full p-4 border-2 border-dashed rounded-lg text-center transition-colors ${
-        isComponentDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+        isComponentDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
       } ${
-        isDragging ? 'border-banana-yellow bg-banana-yellow/10' : 'border-brand-subtle hover:border-banana-yellow hover:bg-brand-surface/50'
+        isDragging ? 'border-ring bg-muted' : 'border-border hover:border-ring'
       }`}
       onClick={() => !isComponentDisabled && fileInputRef.current?.click()}
       role="button"
@@ -99,17 +100,17 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files
         ref={fileInputRef} 
         onChange={handleFileChange}
         multiple={maxFiles > 1}
-        accept="image/*" 
+        accept={SUPPORTED_MIME_TYPES.join(',')}
         className="hidden" 
         disabled={!canUpload}
       />
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 text-brand-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
-      <p className="text-brand-subtle text-sm pointer-events-none">
+      <p className="text-muted-foreground text-sm pointer-events-none">
         {isDragging 
           ? 'Drop files to upload' 
-          : <><span className="font-semibold text-banana-yellow">Click to upload</span> or drag and drop</>
+          : <><span className="font-medium text-foreground">Click to upload</span> or drag and drop</>
         }
       </p>
     </div>
@@ -123,13 +124,13 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
-      <h4 className="font-semibold text-brand-text">{title}</h4>
-      <p className="text-sm text-brand-subtle mb-2">{description}</p>
+      <h4 className="font-semibold text-foreground">{title}</h4>
+      <p className="text-sm text-muted-foreground mb-2">{description}</p>
       
       {files.length > 0 && (
         <div className={`grid gap-2 my-2 ${maxFiles > 1 ? 'grid-cols-3' : 'grid-cols-1'}`}>
           {files.map((file, index) => (
-            <div key={`${file.name}-${index}`} className="relative group aspect-square bg-black/20 rounded-md overflow-hidden">
+            <div key={`${file.name}-${index}`} className="relative group aspect-square bg-muted rounded-md overflow-hidden border border-border">
               <img 
                 src={URL.createObjectURL(file)} 
                 alt={`preview ${index}`}
@@ -138,7 +139,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ title, description, files
               />
               <button 
                 onClick={() => handleRemoveImage(index)}
-                className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="absolute top-1 right-1 bg-background/60 text-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 aria-label="Remove image"
                 disabled={isLoading}
               >
