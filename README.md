@@ -1,6 +1,4 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="./2025-10-29_08-04.png" />
-</div>
+![Gemini_Vision_Studio](./2025-10-29_08-04.png)
 
 
 # Gemini Vision Studio
