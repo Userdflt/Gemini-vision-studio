@@ -170,8 +170,8 @@ const App: React.FC = () => {
   ]);
 
   return (
-    <div className="min-h-screen">
-      <div className="">
+    <div className="min-h-screen flex flex-col">
+      <div className="flex-grow">
         <div className="bg-gradient-to-b from-black/20 to-transparent">
           <header className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-4 flex justify-between items-center border-b border-white/10">
@@ -218,56 +218,71 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
       
-      <main 
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 -mt-20 opacity-0"
-        style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards' }}
-      >
-        {!isInitialized ? (
-          <div className="flex items-center justify-center pt-20">
-            <Loader />
-          </div>
-        ) : (
-          <>
-            <PromptInput
-              brief={brief}
-              setBrief={setBrief}
-              editBrief={editBrief}
-              setEditBrief={setEditBrief}
-              generationMode={generationMode}
-              setGenerationMode={setGenerationMode}
-              onGenerate={handleGenerate}
-              isLoading={isLoading}
-              referenceImages={referenceImages}
-              setReferenceImages={setReferenceImages}
-              backgroundImage={backgroundImage}
-              setBackgroundImage={setBackgroundImage}
-              editImage={editImage}
-              setEditImage={setEditImage}
-              sketchImage={sketchImage}
-              setSketchImage={setSketchImage}
-              floorplanImage={floorplanImage}
-              setFloorplanImage={setFloorplanImage}
-              relatedImageBase={relatedImageBase}
-              setRelatedImageBase={setRelatedImageBase}
-              maskImage={maskImage}
-              setMaskImage={setMaskImage}
-              imageCount={imageCount}
-              setImageCount={setImageCount}
-            />
-            {isLoading && !generatedContent && !generatedImages && <Loader />}
-            {error && <div className="mt-8 text-center text-destructive bg-destructive/10 p-4 rounded-md">{error}</div>}
-            {(generatedContent || generatedImages) && !isLoading && (
-              <ResultsDisplay
-                content={generatedContent}
-                images={generatedImages}
+        <main 
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 -mt-20 opacity-0"
+          style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards' }}
+        >
+          {!isInitialized ? (
+            <div className="flex items-center justify-center pt-20">
+              <Loader />
+            </div>
+          ) : (
+            <>
+              <PromptInput
+                brief={brief}
+                setBrief={setBrief}
+                editBrief={editBrief}
+                setEditBrief={setEditBrief}
                 generationMode={generationMode}
+                setGenerationMode={setGenerationMode}
+                onGenerate={handleGenerate}
+                isLoading={isLoading}
+                referenceImages={referenceImages}
+                setReferenceImages={setReferenceImages}
+                backgroundImage={backgroundImage}
+                setBackgroundImage={setBackgroundImage}
+                editImage={editImage}
+                setEditImage={setEditImage}
+                sketchImage={sketchImage}
+                setSketchImage={setSketchImage}
+                floorplanImage={floorplanImage}
+                setFloorplanImage={setFloorplanImage}
+                relatedImageBase={relatedImageBase}
+                setRelatedImageBase={setRelatedImageBase}
+                maskImage={maskImage}
+                setMaskImage={setMaskImage}
+                imageCount={imageCount}
+                setImageCount={setImageCount}
               />
-            )}
-          </>
-        )}
-      </main>
+              {isLoading && !generatedContent && !generatedImages && <Loader />}
+              {error && <div className="mt-8 text-center text-destructive bg-destructive/10 p-4 rounded-md">{error}</div>}
+              {(generatedContent || generatedImages) && !isLoading && (
+                <ResultsDisplay
+                  content={generatedContent}
+                  images={generatedImages}
+                  generationMode={generationMode}
+                />
+              )}
+            </>
+          )}
+        </main>
+      </div>
+      <footer className="w-full text-center p-6 text-xs text-muted-foreground">
+        <p>Copyright © 2025 The Gemini Vision Studio Authors. All rights reserved.</p>
+        <p>
+            Licensed under the{' '}
+            <a
+                href="http://www.apache.org/licenses/LICENSE-2.0"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-foreground transition-colors"
+            >
+                Apache License, Version 2.0
+            </a>
+            .
+        </p>
+      </footer>
     </div>
   );
 };
