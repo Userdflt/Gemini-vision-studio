@@ -179,21 +179,27 @@ const App: React.FC = () => {
             </div>
           </header>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 md:pt-20 md:pb-16 text-center">
+            <img
+              src="https://github.com/Userdflt/Gemini-vision-studio/raw/main/Gemini_Vision_Studio_logo2.png"
+              alt="Gemini Vision Studio Logo"
+              className="h-60 w-auto mx-auto mb-8 opacity-0"
+              style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards' }}
+            />
             <h1 
               className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-white opacity-0"
-              style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards' }}
+              style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards' }}
             >
               Gemini Image Generation <span className="text-blue-500">Simplified</span>
             </h1>
             <p
               className="mt-6 max-w-3xl mx-auto text-lg text-gray-300 opacity-0"
-              style={{ whiteSpace: 'pre-line', animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards' }}
+              style={{ whiteSpace: 'pre-line', animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards' }}
             >
             {"\nTransform simple ideas into polished, high-quality visuals through intelligent multi-agent workflows. \n\n"}
             </p>
             <div 
               className="mt-12 relative opacity-0"
-              style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards' }}
+              style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards' }}
             >
               <div 
                 className="absolute inset-0 z-10" 
@@ -221,7 +227,7 @@ const App: React.FC = () => {
       
         <main 
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 -mt-20 opacity-0"
-          style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards' }}
+          style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards' }}
         >
           {!isInitialized ? (
             <div className="flex items-center justify-center pt-20">
