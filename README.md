@@ -4,7 +4,7 @@
 
 Gemini Vision Studio is an advanced web application that showcases the power of a multi-agent workflow for sophisticated image generation. It transforms simple user ideas into high-quality, polished visuals by first orchestrating AI agents to craft a perfect prompt, and then using that prompt to generate stunning images with the Google Gemini API.
 
-![Gemini Vision Studio Screenshot](https://storage.googleapis.com/aistudio-web-dev-team-prod-scratch-space/b0e517a6-3c0f-4886-9a28-66d581897e09/gemini-vision-studio.png)
+![Gemini Vision Studio Screenshot](Gemini_Vision_Studio_logo.png)
 
 ## Key Features
 
