@@ -182,7 +182,7 @@ const App: React.FC = () => {
             <img
               src="https://github.com/Userdflt/Gemini-vision-studio/raw/main/Gemini_Vision_Studio_logo2.png"
               alt="Gemini Vision Studio Logo"
-              className="h-60 w-auto mx-auto mb-8 opacity-0"
+              className="h-65 max-w-xs mx-auto mb-8 opacity-0"
               style={{ animation: 'fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards' }}
             />
             <h1 
